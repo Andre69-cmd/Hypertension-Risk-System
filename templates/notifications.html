@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+    <h2>🔔 {{ t('notifications') }}</h2>
+    <div>
+        <a href="{{ url_for('notification_preferences') }}" class="btn btn-secondary">⚙️ {{ t('preferences') }}</a>
+        <form method="POST" action="{{ url_for('mark_all_read') }}" style="display:inline;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-secondary">{{ t('mark_read') }}</button>
+        </form>
+    </div>
+</div>
+
+{% if notifications %}
+<div class="notif-list">
+    {% for n in notifications %}
+    <div class="notif-row notif-{{ n.category }} {% if n.is_read %}read{% endif %}">
+        <div class="notif-body">
+            <div class="notif-header">
+                <strong>{{ n.title }}</strong>
+                <span class="notif-cat-badge cat-{{ n.category }}">{{ n.category }}</span>
+                {% if not n.is_read %}<span class="notif-unread-dot"></span>{% endif %}
+            </div>
+            <div class="notif-message">{{ n.message }}</div>
+            <div class="notif-meta">🕒 {{ n.created_at.strftime('%b %d, %Y — %H:%M') }} · via {{ n.channel }}</div>
+        </div>
+        <div class="notif-actions">
+            {% if not n.is_read %}
+            <form method="POST" action="{{ url_for('mark_notification_read', n_id=n.id) }}" style="display:inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-small">{{ t('mark_read') }}</button>
+            </form>
+            {% endif %}
+            <form method="POST" action="{{ url_for('delete_notification', n_id=n.id) }}"
+                  onsubmit="return confirm('Delete?');" style="display:inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-small btn-danger">{{ t('delete') }}</button>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state"><p>{{ t('no_data') }}</p></div>
+{% endif %}
+{% endblock %}

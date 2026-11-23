@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header"><h2>⏰ Health Reminders</h2></div>
+<div class="reminders-layout">
+    <div class="reminder-form-box">
+        <h3>Add New Reminder</h3>
+        <form method="POST">
+            {{ form.hidden_tag() }}
+            <div class="form-group">{{ form.reminder_type.label }}{{ form.reminder_type(class="form-control") }}</div>
+            <div class="form-group">{{ form.frequency.label }}{{ form.frequency(class="form-control") }}</div>
+            <div class="form-group">{{ form.next_date.label }}{{ form.next_date(class="form-control") }}</div>
+            <div class="form-group">{{ form.notes.label }}{{ form.notes(class="form-control", rows="2") }}</div>
+            {{ form.submit(class="btn btn-primary btn-block") }}
+        </form>
+    </div>
+    <div class="reminder-list-box">
+        <h3>Your Reminders</h3>
+        {% if reminders %}
+            {% for r in reminders %}
+            <div class="reminder-item {% if not r.active %}inactive{% endif %}">
+                <div class="reminder-info">
+                    <strong>{{ r.reminder_type }}</strong>
+                    <span class="badge-freq">{{ r.frequency }}</span>
+                    <div class="reminder-sub">Next: {{ r.next_date.strftime('%b %d, %Y — %H:%M') }}
+                        {% if not r.active %} — <em>Paused</em>{% endif %}</div>
+                    {% if r.notes %}<div class="reminder-notes">{{ r.notes }}</div>{% endif %}
+                </div>
+                <div class="reminder-actions">
+                    <form method="POST" action="{{ url_for('toggle_reminder', rem_id=r.id) }}" style="display:inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="btn btn-small">{{ 'Pause' if r.active else 'Activate' }}</button>
+                    </form>
+                    <form method="POST" action="{{ url_for('delete_reminder', rem_id=r.id) }}"
+                          onsubmit="return confirm('Delete?');" style="display:inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="btn btn-small btn-danger">Delete</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}<p class="empty-text">No reminders yet.</p>{% endif %}
+    </div>
+</div>
+{% endblock %}

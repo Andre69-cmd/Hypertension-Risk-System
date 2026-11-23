@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="assessment-container">
+    <h2>⚙️ Notification Preferences</h2>
+    <p class="form-subtitle">Control how and when you receive alerts</p>
+
+    <form method="POST">
+        {{ form.hidden_tag() }}
+
+        <div class="pref-group">
+            <h3>Channels</h3>
+            <div class="pref-row">
+                <div>{{ form.in_app_enabled() }} {{ form.in_app_enabled.label }}</div>
+                <div>{{ form.email_enabled() }} {{ form.email_enabled.label }}</div>
+                <div>{{ form.sms_enabled() }} {{ form.sms_enabled.label }}</div>
+            </div>
+            <div class="form-group">{{ form.phone_number.label }}{{ form.phone_number(class="form-control", placeholder="+256-700-000-000") }}</div>
+        </div>
+
+        <div class="pref-group">
+            <h3>Alert Categories</h3>
+            <div class="pref-row">
+                <div>{{ form.risk_alerts() }} {{ form.risk_alerts.label }}</div>
+                <div>{{ form.appointment_alerts() }} {{ form.appointment_alerts.label }}</div>
+            </div>
+            <div class="pref-row">
+                <div>{{ form.reminder_alerts() }} {{ form.reminder_alerts.label }}</div>
+                <div>{{ form.emergency_alerts() }} {{ form.emergency_alerts.label }}</div>
+            </div>
+        </div>
+
+        {{ form.submit(class="btn btn-primary btn-block") }}
+    </form>
+
+    <div class="form-footer">
+        <a href="{{ url_for('notifications') }}">← Back to Notifications</a>
+    </div>
+</div>
+{% endblock %}

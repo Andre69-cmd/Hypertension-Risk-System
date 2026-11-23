@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="about-hero">
+    <div class="hero-icon">❤</div>
+    <h1>{{ t('app_name') }}</h1>
+    <p class="version-tag">Version {{ app_version }} · {{ app_build }}</p>
+    <p class="author-line">{{ app_author }}</p>
+</div>
+
+<div class="about-grid">
+    <div class="about-card">
+        <h3>🎯 Purpose</h3>
+        <p>A comprehensive Hypertension Risk Early Warning System that combines machine learning, explainable AI, and complete care coordination to empower patients and clinicians.</p>
+    </div>
+
+    <div class="about-card">
+        <h3>🛠 Technology Stack</h3>
+        <ul>
+            <li><strong>Backend:</strong> Flask 2.3, SQLAlchemy, Flask-Login</li>
+            <li><strong>ML:</strong> Scikit-learn (Logistic Regression)</li>
+            <li><strong>Explainability:</strong> SHAP</li>
+            <li><strong>Reports:</strong> ReportLab (PDF), built-in CSV</li>
+            <li><strong>Maps:</strong> Leaflet.js + OpenStreetMap</li>
+            <li><strong>Telemedicine:</strong> Jitsi Meet</li>
+            <li><strong>QR:</strong> qrcode[pil]</li>
+            <li><strong>i18n:</strong> Custom translation layer (EN/FR/SW)</li>
+            <li><strong>Deployment:</strong> Gunicorn + WSGI</li>
+        </ul>
+    </div>
+
+    <div class="about-card">
+        <h3>📊 System Statistics</h3>
+        <div class="about-stats">
+            <div><strong>{{ total_users }}</strong><span>Registered Users</span></div>
+            <div><strong>{{ total_assessments }}</strong><span>Assessments Made</span></div>
+            <div><strong>{{ total_doctors }}</strong><span>Doctors in Directory</span></div>
+        </div>
+    </div>
+
+    <div class="about-card">
+        <h3>📦 Complete Feature Set</h3>
+        <ul>
+            <li>✅ Non-invasive risk assessment (6 indicators)</li>
+            <li>✅ SHAP explainable AI</li>
+            <li>✅ Personalized health education</li>
+            <li>✅ Health facility locator with maps</li>
+            <li>✅ Health reminders (auto + custom)</li>
+            <li>✅ Emergency SOS + contacts</li>
+            <li>✅ In-app notifications + preferences</li>
+            <li>✅ PDF & CSV report exports</li>
+            <li>✅ Multi-language (EN/FR/SW)</li>
+            <li>✅ Advanced analytics dashboard</li>
+            <li>✅ Health check endpoint</li>
+            <li>✅ QR code sharing</li>
+        </ul>
+    </div>
+
+    <div class="about-card full">
+        <h3>⚖️ Disclaimer</h3>
+        <p>This system is a <strong>research prototype</strong> developed for academic demonstration. It uses synthetic training data and is NOT intended for medical diagnosis. Always consult a qualified healthcare professional for medical advice, diagnosis, or treatment.</p>
+    </div>
+</div>
+
+<div class="about-actions">
+    <a href="{{ url_for('index') }}" class="btn btn-primary">← Home</a>
+    <a href="{{ url_for('health') }}" class="btn btn-secondary">System Health</a>
+    <a href="{{ url_for('share_qr') }}" class="btn btn-secondary">📱 Share via QR</a>
+</div>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="form-container">
+    <h2>{{ t('login') }}</h2>
+    <p class="form-subtitle">{{ t('welcome_back') }}</p>
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        <div class="form-group">{{ form.email.label }}{{ form.email(class="form-control") }}</div>
+        <div class="form-group">{{ form.password.label }}{{ form.password(class="form-control") }}</div>
+        {{ form.submit(class="btn btn-primary btn-block") }}
+    </form>
+    <div class="form-footer">
+        <p>New? <a href="{{ url_for('register') }}">{{ t('register') }}</a></p>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="assessment-container">
+    <h2>🚨 Emergency Contact Setup</h2>
+    <p class="form-subtitle">This person will be notified in an emergency.</p>
+    {% if contact %}
+    <div class="emergency-current">
+        <h3>Current Emergency Contact</h3>
+        <p><strong>{{ contact.name }}</strong>{% if contact.relationship %} — {{ contact.relationship }}{% endif %}</p>
+        <p>📞 <a href="tel:{{ contact.phone }}">{{ contact.phone }}</a></p>
+    </div>
+    {% else %}<div class="emergency-warn"><p>⚠️ No emergency contact set.</p></div>{% endif %}
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        <div class="form-group">{{ form.name.label }}{{ form.name(class="form-control") }}
+            {% for e in form.name.errors %}<span class="error">{{ e }}</span>{% endfor %}</div>
+        <div class="form-group">{{ form.relationship.label }}{{ form.relationship(class="form-control") }}</div>
+        <div class="form-group">{{ form.phone.label }}{{ form.phone(class="form-control") }}
+            {% for e in form.phone.errors %}<span class="error">{{ e }}</span>{% endfor %}</div>
+        {{ form.submit(class="btn btn-primary btn-block") }}
+    </form>
+    <div class="emergency-numbers">
+        <h3>Local Emergency Numbers</h3>
+        <ul>
+            <li>🚑 Ambulance: <a href="tel:911">911</a></li>
+            <li>🚒 Fire: <a href="tel:911">911</a></li>
+            <li>🚓 Police: <a href="tel:911">911</a></li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

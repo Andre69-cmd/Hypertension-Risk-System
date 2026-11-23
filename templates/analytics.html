@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+    <h2>📈 {{ t('analytics') }} — {{ t('insights') }}</h2>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card"><h3>{{ t('total_users') }}</h3><p class="stat-number">{{ total_users }}</p></div>
+    <div class="stat-card"><h3>{{ t('total_assessments') }}</h3><p class="stat-number">{{ total_assessments }}</p></div>
+    <div class="stat-card"><h3>{{ t('high_risk') }}</h3><p class="stat-number">{{ risk_counts.High }}</p></div>
+    <div class="stat-card"><h3>{{ t('medium_risk') }}</h3><p class="stat-number">{{ risk_counts.Medium }}</p></div>
+    <div class="stat-card"><h3>{{ t('low_risk') }}</h3><p class="stat-number">{{ risk_counts.Low }}</p></div>
+</div>
+
+<div class="insights-box">
+    <h3>💡 {{ t('insights') }}</h3>
+    <ul>
+        {% for insight in insights %}
+        <li>{{ insight }}</li>
+        {% endfor %}
+    </ul>
+</div>
+
+<div class="chart-box-full">
+    <h3>📊 6-Month Trend</h3>
+    <img src="data:image/png;base64,{{ trend_chart }}" alt="Trend chart">
+    <div class="trend-table">
+        <table class="mini-table">
+            <thead><tr><th>Month</th><th>Assessments</th><th>Avg Probability</th></tr></thead>
+            <tbody>
+            {% for i in range(months_labels|length) %}
+                <tr>
+                    <td>{{ months_labels[i] }}</td>
+                    <td>{{ monthly_counts[i] }}</td>
+                    <td>{{ monthly_avg_prob[i] }}%</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="chart-row">
+    <div class="chart-box">
+        <h3>🥧 {{ t('risk_distribution') }}</h3>
+        <img src="data:image/png;base64,{{ risk_pie }}" alt="Risk pie">
+    </div>
+    {% if age_scatter %}
+    <div class="chart-box">
+        <h3>🎯 Age vs Risk</h3>
+        <img src="data:image/png;base64,{{ age_scatter }}" alt="Age scatter">
+    </div>
+    {% endif %}
+</div>
+
+{% if feature_chart %}
+<div class="chart-box-full">
+    <h3>🔬 Average Feature Values by Risk Level</h3>
+    <img src="data:image/png;base64,{{ feature_chart }}" alt="Feature chart">
+</div>
+{% endif %}
+
+<div class="chart-actions">
+    <a href="{{ url_for('admin') }}" class="btn btn-secondary">← {{ t('admin') }}</a>
+</div>
+{% endblock %}

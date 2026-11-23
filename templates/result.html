@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block body_class %}dark-mode{% endblock %}
+
+{% block content %}
+<div class="result-card dark-result">
+    <h2>Your Assessment Result</h2>
+    
+    <div class="risk-badge risk-{{ risk_level | lower }}">
+        Risk Level: <strong>{{ risk_level }}</strong>
+    </div>
+    
+    <p class="probability">Probability of hypertension: <strong>{{ probability }}%</strong></p>
+    
+    <div class="recommendation dark-recommendation">
+        <strong>Recommendation:</strong> {{ recommendation }}
+    </div>
+    
+    {% if shap_img %}
+    <h3>How your factors influenced the risk:</h3>
+    <img src="data:image/png;base64,{{ shap_img }}" alt="SHAP Explanation" class="shap-img">
+    {% endif %}
+    
+    {% if education_cards %}
+    <div class="education-section">
+        <h3>📚 Personalized Health Advice</h3>
+        <p class="education-intro">Based on your top risk factors, here are personalized recommendations:</p>
+        
+        {% for card in education_cards %}
+        <div class="education-card">
+            <h4>{{ card.title }}</h4>
+            <p>{{ card.content }}</p>
+            <ul>
+                {% for tip in card.tips %}
+                <li>{{ tip }}</li>
+                {% endfor %}
+            </ul>
+            <a href="{{ card.link }}" target="_blank" class="btn btn-secondary">Learn More</a>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    <!-- Health Facility Locator -->
+    <div class="facility-section {% if risk_level == 'High' %}urgent{% endif %}">
+        <h3>{% if risk_level == 'High' %}⚠️ Urgent: Find a Health Facility Now{% else %}Find a Health Facility Near You{% endif %}</h3>
+        <button id="findFacilityBtn" class="btn btn-secondary">📍 Locate Nearby Clinics</button>
+        <div class="manual-location" style="margin-top:10px;">
+            <input type="text" id="manualCity" placeholder="Enter city or area (e.g., Kampala)" />
+            <button id="manualSearchBtn" class="btn">Search</button>
+        </div>
+        <div id="facilityList"></div>
+        <div id="map" style="height: 300px; margin-top: 20px;"></div>
+    </div>
+    
+    <div class="result-actions">
+        <a href="{{ url_for('assessment') }}" class="btn btn-primary">New Assessment</a>
+        <a href="{{ url_for('history') }}" class="btn btn-secondary">View History</a>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let mapInstance = null;
+
+    function fetchFacilities(lat, lon) {
+        document.getElementById('facilityList').innerHTML = '<p style="color:#f4a261;">Searching for clinics nearby…</p>';
+        
+        fetch('/api/facilities', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ lat: lat, lon: lon })
+        })
+        .then(res => res.json())
+        .then(data => {
+            const listDiv = document.getElementById('facilityList');
+            listDiv.innerHTML = '';
+            
+            if (data.error) {
+                listDiv.innerHTML = `<p style="color:#ff6b6b; padding:1rem; background:#2a1a1a; border-radius:6px;">${data.error}</p>`;
+                return;
+            }
+            
+            if (data.length === 0) {
+                listDiv.innerHTML = '<p>No facilities found nearby.</p>';
+                return;
+            }
+
+            data.forEach(f => {
+                const div = document.createElement('div');
+                div.className = 'facility-item';
+                div.innerHTML = `
+                    <strong>${f.name}</strong> – ${f.distance} km<br>
+                    <em>${f.address}</em><br>
+                    <span>📞 ${f.phone}</span><br>
+                    <a href="https://www.openstreetmap.org/directions?from=${lat},${lon}&to=${f.lat},${f.lon}" target="_blank">Get Directions</a>
+                `;
+                listDiv.appendChild(div);
+            });
+
+            if (mapInstance) { mapInstance.remove(); }
+            mapInstance = L.map('map').setView([lat, lon], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(mapInstance);
+            
+            L.marker([lat, lon]).addTo(mapInstance).bindPopup('You are here').openPopup();
+            
+            data.forEach(f => {
+                L.marker([f.lat, f.lon]).addTo(mapInstance).bindPopup(`<strong>${f.name}</strong><br>${f.address}`);
+            });
+        })
+        .catch(err => {
+            document.getElementById('facilityList').innerHTML = `<p style="color:#ff6b6b;">Error connecting to server: ${err.message}</p>`;
+        });
+    }
+
+    document.getElementById('findFacilityBtn').addEventListener('click', function() {
+        if (!navigator.geolocation) {
+            alert('Geolocation is not supported by your browser.');
+            return;
+        }
+        document.getElementById('facilityList').innerHTML = '<p style="color:#f4a261;">Getting your location...</p>';
+        navigator.geolocation.getCurrentPosition(
+            function(position) {
+                fetchFacilities(position.coords.latitude, position.coords.longitude);
+            }, 
+            function(error) {
+                document.getElementById('facilityList').innerHTML = '<p style="color:#ff6b6b;">Unable to get GPS location. Please search manually below.</p>';
+            }
+        );
+    });
+
+    document.getElementById('manualSearchBtn').addEventListener('click', function() {
+        const city = document.getElementById('manualCity').value;
+        if (!city) return;
+        
+        document.getElementById('facilityList').innerHTML = '<p style="color:#f4a261;">Finding coordinates...</p>';
+        
+        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)}`, {
+            headers: { 'User-Agent': 'HypertensionRiskSystem/1.0 (student@example.com)' }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data && data.length > 0) {
+                fetchFacilities(data[0].lat, data[0].lon);
+            } else {
+                document.getElementById('facilityList').innerHTML = '<p style="color:#ff6b6b;">City not found. Please try a larger city like "Kampala".</p>';
+            }
+        })
+        .catch(err => {
+            document.getElementById('facilityList').innerHTML = '<p style="color:#ff6b6b;">Error finding location. Please try again.</p>';
+        });
+    });
+</script>
+{% endblock %}

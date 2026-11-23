@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="qr-container">
+    <h2>📱 Share via QR Code</h2>
+    <p class="form-subtitle">Scan this code to open the system on any device</p>
+
+    <div class="qr-card">
+        <img src="data:image/png;base64,{{ qr_img }}" alt="QR Code" class="qr-img">
+        <div class="qr-url">{{ share_url }}</div>
+        <p class="qr-hint">Point your phone camera at the code to open the app.</p>
+    </div>
+
+    <div class="qr-instructions">
+        <h3>💡 How to Use</h3>
+        <ol>
+            <li>Open your phone's camera app</li>
+            <li>Point at the QR code</li>
+            <li>Tap the notification to open the site</li>
+            <li>Login and explore the system</li>
+        </ol>
+    </div>
+
+    <div class="result-actions">
+        <a href="{{ url_for('dashboard') }}" class="btn btn-primary">Back to Dashboard</a>
+        <a href="{{ url_for('about') }}" class="btn btn-secondary">About</a>
+    </div>
+</div>
+{% endblock %}

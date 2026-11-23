@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 style="color: var(--primary); margin-bottom: 1.5rem;">Admin Dashboard</h2>
+
+<div class="stats-grid">
+    <div class="stat-card"><h3>Users</h3><p class="stat-number">{{ total_users }}</p></div>
+    <div class="stat-card"><h3>Assessments</h3><p class="stat-number">{{ total_assess }}</p></div>
+    <div class="stat-card"><h3>Reminders</h3><p class="stat-number">{{ total_reminders }}</p></div>
+    <div class="stat-card"><h3>Notifications</h3><p class="stat-number">{{ total_notifications }}</p></div>
+    <div class="stat-card"><h3>Avg Probability</h3><p class="stat-number">{{ avg_prob }}%</p></div>
+</div>
+
+<div class="chart-row">
+    <div class="chart-box">
+        <h3>Risk Level Distribution</h3>
+        <img src="data:image/png;base64,{{ risk_chart }}" 
+             alt="Risk Distribution" 
+             style="max-width: 100%; height: auto; border-radius: 8px;">
+    </div>
+    <div class="chart-box">
+        <h3>Probability Histogram</h3>
+        <img src="data:image/png;base64,{{ prob_chart }}" 
+             alt="Probability Histogram" 
+             style="max-width: 100%; height: auto; border-radius: 8px;">
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="assessment-container">
+    <h2>Hypertension Risk Assessment</h2>
+    <p class="form-subtitle">Enter your health information to calculate your risk</p>
+    <form method="POST" class="assessment-form">
+        {{ form.hidden_tag() }}
+        <div class="form-row">
+            <div class="form-group">{{ form.age.label }}{{ form.age(class="form-control", placeholder="e.g., 45") }}
+                {% for e in form.age.errors %}<span class="error">{{ e }}</span>{% endfor %}</div>
+            <div class="form-group">{{ form.bmi.label }}{{ form.bmi(class="form-control", placeholder="e.g., 24.5") }}
+                {% for e in form.bmi.errors %}<span class="error">{{ e }}</span>{% endfor %}</div>
+        </div>
+        <div class="form-group">{{ form.smoking.label }}{{ form.smoking(class="form-control") }}</div>
+        <div class="form-group">{{ form.alcohol.label }}{{ form.alcohol(class="form-control") }}</div>
+        <div class="form-group">{{ form.physical_activity.label }}{{ form.physical_activity(class="form-control") }}</div>
+        <div class="form-group">{{ form.family_history.label }}{{ form.family_history(class="form-control") }}</div>
+        {{ form.submit(class="btn btn-primary btn-block") }}
+    </form>
+</div>
+{% endblock %}

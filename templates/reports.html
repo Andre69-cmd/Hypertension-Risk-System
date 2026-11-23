@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header"><h2>📄 Health Reports</h2></div>
+<div class="report-hero">
+    <h3>Export Your Health Data</h3>
+    <p>Generate a comprehensive report of your assessments and reminders.</p>
+    <div class="report-buttons">
+        <a href="{{ url_for('download_pdf') }}" class="btn btn-primary">📄 Download Full PDF Report</a>
+        <a href="{{ url_for('download_csv') }}" class="btn btn-secondary">📊 Export Assessments (CSV)</a>
+    </div>
+</div>
+<div class="stats-grid">
+    <div class="stat-card"><h3>Assessments</h3><p class="stat-number">{{ assessments|length }}</p></div>
+    <div class="stat-card"><h3>Reminders</h3><p class="stat-number">{{ reminders|length }}</p></div>
+</div>
+<div class="report-preview">
+    <h3>What's Included in the PDF:</h3>
+    <ul>
+        <li>✓ Patient information and report generation timestamp</li>
+        <li>✓ Assessment summary (latest risk, average probability)</li>
+        <li>✓ Full assessment history table</li>
+        <li>✓ Active reminders</li>
+        <li>✓ Medical disclaimer</li>
+    </ul>
+</div>
+{% endblock %}

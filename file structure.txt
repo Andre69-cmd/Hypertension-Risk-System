@@ -1,0 +1,80 @@
+HypertensionRiskSystem_WEEK8/
+├── app.py
+├── model.py
+├── requirements.txt
+├── translations.py
+├── seed_doctors.py
+├── tests.py                    ⭐ NEW
+├── README.md                   ⭐ NEW
+├── Procfile                    ⭐ NEW (deployment)
+├── .env.example                ⭐ NEW
+├── templates/
+│   ├── base.html
+│   ├── index.html
+│   ├── register.html
+│   ├── login.html
+│   ├── dashboard.html
+│   ├── assessment.html
+│   ├── result.html
+│   ├── history.html
+│   ├── admin.html
+│   ├── analytics.html
+│   ├── appointments.html
+│   ├── book_appointment.html
+│   ├── reminders.html
+│   ├── doctors.html
+│   ├── emergency.html
+│   ├── notifications.html
+│   ├── notification_preferences.html
+│   ├── reports.html
+│   ├── about.html              ⭐ NEW
+│   └── share_qr.html           ⭐ NEW
+└── static/
+    └── css/
+        └── style.css
+ this system below has already these things showing that have already been done and having them set up like reminders and appointments setup like i want these things empty which is assessments, appointments, reminders, notifications, health reports and emergency setup so please work on it  
+
+
+winget install Python.Python.3.12
+winget install Git.Git
+winget install Microsoft.VisualStudioCode
+winget install Microsoft.OpenJDK.17
+winget install Docker.DockerDesktop
+
+C:\Windows\system32>DISM /Online /Cleanup-Image /StartComponentCleanup
+
+Deployment Image Servicing and Management tool
+Version: 10.0.18362.1
+
+Image Version: 10.0.18362.207
+
+[===========                20.0%                          ]
+The operation completed successfully.
+
+C:\Windows\system32>
+
+honestly i am just online      what would you recomend me to do right now with this opportunity of being online as a machine learning engineer 
+
+# 1. Create folder
+mkdir HypertensionRiskSystem_WEEK8
+cd HypertensionRiskSystem_WEEK8
+mkdir templates static static/css
+
+# 2. Copy all files above into their locations
+
+# 3. Install dependencies
+pip install -r requirements.txt
+
+# 4. Train model
+python model.py
+
+# 5. Seed doctors
+python seed_doctors.py
+
+# 6. Run unit tests (optional — shows quality)
+python tests.py
+
+# 7. Start the app
+python app.py
+
+# 8. Open → http://127.0.0.1:5000

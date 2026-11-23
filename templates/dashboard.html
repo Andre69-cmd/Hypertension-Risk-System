@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="dashboard">
+    <h2>Welcome, {{ user.email }}</h2>
+    <p class="form-subtitle">Your health overview at a glance</p>
+
+    <div class="quick-actions">
+        <a href="{{ url_for('assessment') }}" class="quick-action-btn">📊 New Assessment</a>
+        <a href="{{ url_for('reminders') }}" class="quick-action-btn">⏰ Add Reminder</a>
+        <a href="{{ url_for('notifications') }}" class="quick-action-btn">🔔 Notifications</a>
+        <a href="{{ url_for('reports') }}" class="quick-action-btn">📄 Health Reports</a>
+        <a href="{{ url_for('emergency') }}" class="quick-action-btn danger">🚨 Emergency Setup</a>
+    </div>
+
+    {% if personal_trend_chart %}
+    <div class="dashboard-section">
+        <h3>📈 Your Risk Trend</h3>
+        <img src="data:image/png;base64,{{ personal_trend_chart }}" alt="Personal trend" style="max-width:100%;border-radius:8px;">
+    </div>
+    {% endif %}
+
+    {% if unread_notifications %}
+    <div class="dashboard-section notif-highlight">
+        <h3>🔔 Latest Notifications</h3>
+        {% for n in unread_notifications %}
+        <div class="notif-item notif-{{ n.category }}">
+            <strong>{{ n.title }}</strong>
+            <div class="notif-msg">{{ n.message }}</div>
+            <div class="notif-time">{{ n.created_at.strftime('%b %d — %H:%M') }}</div>
+        </div>
+        {% endfor %}
+        <a href="{{ url_for('notifications') }}" class="view-all">View all →</a>
+    </div>
+    {% endif %}
+
+    <div class="dashboard-grid">
+        <div class="dashboard-section">
+            <h3>⏰ Active Reminders</h3>
+            {% if active_reminders %}
+                {% for r in active_reminders %}
+                <div class="list-item">
+                    <strong>{{ r.reminder_type }}</strong>
+                    <span class="badge-freq">{{ r.frequency }}</span>
+                    <div class="list-item-sub">Next: {{ r.next_date.strftime('%b %d, %Y') }}</div>
+                </div>
+                {% endfor %}
+                <a href="{{ url_for('reminders') }}" class="view-all">Manage reminders →</a>
+            {% else %}
+                <div class="empty-state-mini">
+                    <p>No active reminders.</p>
+                    <a href="{{ url_for('reminders') }}" class="view-all">Add one →</a>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="dashboard-section">
+            <h3>📋 Recent Assessments</h3>
+            {% if recent_assessments %}
+                <div class="assessment-cards">
+                    {% for a in recent_assessments %}
+                    <div class="assessment-card">
+                        <div class="assessment-date">{{ a.timestamp.strftime('%b %d, %Y') }}</div>
+                        <div class="risk-badge risk-{{ a.risk_level.lower() }}">{{ a.risk_level }} Risk</div>
+                        <div class="assessment-probability">Probability: {{ "%.1f"|format(a.probability * 100) }}%</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state-mini">
+                    <p>No assessments yet.</p>
+                    <a href="{{ url_for('assessment') }}" class="view-all">Take your first assessment →</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="dashboard-section emergency-info">
+        <h3>🚨 Emergency Contact on File</h3>
+        {% if emergency %}
+            <p><strong>{{ emergency.name }}</strong> ({{ emergency.relationship }}) — 📞 {{ emergency.phone }}</p>
+            <a href="{{ url_for('emergency') }}" class="view-all">Update →</a>
+        {% else %}
+            <div class="empty-state-mini">
+                <p>No emergency contact set yet.</p>
+                <a href="{{ url_for('emergency') }}" class="view-all">Set one now →</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
