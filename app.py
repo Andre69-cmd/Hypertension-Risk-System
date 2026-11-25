@@ -29,7 +29,7 @@ from translations import TRANSLATIONS, SUPPORTED_LANGUAGES, get_text
 
 # ---------------- Version Info ----------------
 APP_VERSION = "1.0.0"
-APP_BUILD_DATE = "Week 8 — Final"
+APP_BUILD_DATE = " — Final"
 APP_AUTHOR = "Hypertension Risk Research Team"
 
 # ---------------- Config ----------------
@@ -258,6 +258,176 @@ def generate_qr_code(data):
     buf.seek(0)
     return base64.b64encode(buf.read()).decode('utf-8')
 
+# 🚀 NEW: Admin Chart Generator
+def generate_admin_charts():
+    try:
+        assessments = Assessment.query.all()
+        risk_counts = {'Low': 0, 'Medium': 0, 'High': 0}
+        total_prob = 0.0
+        
+        for a in assessments:
+            if a.risk_level in risk_counts:
+                risk_counts[a.risk_level] += 1
+            if a.probability is not None:
+                total_prob += a.probability
+                
+        avg_prob = (total_prob / len(assessments)) if assessments else 0.0
+        
+        # 1. Risk Distribution Bar Chart
+        fig1, ax1 = plt.subplots(figsize=(6, 4))
+        colors_chart = ['#28a745', '#ffc107', '#dc3545']
+        ax1.bar(list(risk_counts.keys()), list(risk_counts.values()), color=colors_chart)
+        ax1.set_title('Risk Level Distribution')
+        ax1.set_ylabel('Number of Assessments')
+        buf1 = io.BytesIO()
+        fig1.savefig(buf1, format='png', bbox_inches='tight')
+        plt.close(fig1)
+        buf1.seek(0)
+        risk_chart = base64.b64encode(buf1.read()).decode('utf-8')
+        
+        # 2. Probability Histogram
+        fig2, ax2 = plt.subplots(figsize=(6, 4))
+        probs = [a.probability * 100 for a in assessments if a.probability is not None]
+        if probs:
+            ax2.hist(probs, bins=10, color='#007bff', edgecolor='black')
+        ax2.set_title('Probability Histogram')
+        ax2.set_xlabel('Probability (%)')
+        ax2.set_ylabel('Frequency')
+        buf2 = io.BytesIO()
+        fig2.savefig(buf2, format='png', bbox_inches='tight')
+        plt.close(fig2)
+        buf2.seek(0)
+        prob_chart = base64.b64encode(buf2.read()).decode('utf-8')
+        
+        return risk_chart, prob_chart, avg_prob, risk_counts
+    except Exception as e:
+        print(f"⚠ Admin chart generation error: {e}")
+        return "", "", 0.0, {'Low': 0, 'Medium': 0, 'High': 0}
+
+# 🚀 NEW: Advanced Analytics Chart Generator
+def generate_analytics_charts():
+    try:
+        assessments = Assessment.query.all()
+        df = pd.DataFrame([{
+            'age': a.age, 'bmi': a.bmi, 'smoking': a.smoking, 'alcohol': a.alcohol,
+            'physical_activity': a.physical_activity, 'family_history': a.family_history,
+            'probability': a.probability, 'risk_level': a.risk_level, 'timestamp': a.timestamp
+        } for a in assessments])
+        
+        # 1. Generate Text Insights
+        insights = []
+        if len(df) > 0:
+            high_risk_count = len(df[df['risk_level'] == 'High'])
+            if high_risk_count > 0:
+                insights.append(f"There are {high_risk_count} high-risk users requiring immediate attention.")
+            avg_bmi = df['bmi'].mean()
+            if avg_bmi > 25:
+                insights.append(f"Average BMI ({avg_bmi:.1f}) is above the healthy range (18.5-24.9).")
+            if len(df[df['smoking'] == 1]) > 0:
+                insights.append("Smoking is a contributing factor for some users.")
+        if not insights:
+            insights.append("No significant risk patterns detected yet. Keep monitoring!")
+            
+        # 2. 6-Month Trend Data & Chart
+        months_labels, monthly_counts, monthly_avg_prob = [], [], []
+        trend_chart = ""
+        
+        if len(df) > 0 and 'timestamp' in df.columns:
+            df['timestamp'] = pd.to_datetime(df['timestamp'])
+            end_date = datetime.utcnow()
+            for i in range(5, -1, -1):
+                month_date = end_date - pd.DateOffset(months=i)
+                month_start = month_date.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+                if month_date.month == 12:
+                    month_end = month_date.replace(year=month_date.year+1, month=1, day=1) - pd.DateOffset(seconds=1)
+                else:
+                    month_end = month_date.replace(month=month_date.month+1, day=1) - pd.DateOffset(seconds=1)
+                
+                month_df = df[(df['timestamp'] >= month_start) & (df['timestamp'] <= month_end)]
+                months_labels.append(month_start.strftime('%b %Y'))
+                monthly_counts.append(len(month_df))
+                avg_p = month_df['probability'].mean() * 100 if len(month_df) > 0 else 0
+                monthly_avg_prob.append(round(avg_p, 1))
+            
+            fig_trend, ax_trend = plt.subplots(figsize=(8, 4))
+            ax_trend.plot(months_labels, monthly_counts, marker='o', color='#007bff', linewidth=2)
+            ax_trend.set_title('Assessments Over Last 6 Months')
+            ax_trend.set_ylabel('Number of Assessments')
+            plt.xticks(rotation=45)
+            plt.tight_layout()
+            buf_trend = io.BytesIO()
+            fig_trend.savefig(buf_trend, format='png', bbox_inches='tight')
+            plt.close(fig_trend)
+            buf_trend.seek(0)
+            trend_chart = base64.b64encode(buf_trend.read()).decode('utf-8')
+            
+        # 3. Risk Pie Chart
+        risk_counts = {'Low': 0, 'Medium': 0, 'High': 0}
+        if len(df) > 0:
+            for r in df['risk_level']:
+                if r in risk_counts: risk_counts[r] += 1
+        
+        fig_pie, ax_pie = plt.subplots(figsize=(6, 6))
+        if sum(risk_counts.values()) > 0:
+            ax_pie.pie(list(risk_counts.values()), labels=list(risk_counts.keys()), colors=['#28a745', '#ffc107', '#dc3545'], autopct='%1.1f%%', startangle=90)
+            ax_pie.set_title('Risk Distribution')
+        else:
+            ax_pie.text(0.5, 0.5, 'No Data', horizontalalignment='center', verticalalignment='center')
+        buf_pie = io.BytesIO()
+        fig_pie.savefig(buf_pie, format='png', bbox_inches='tight')
+        plt.close(fig_pie)
+        buf_pie.seek(0)
+        risk_pie = base64.b64encode(buf_pie.read()).decode('utf-8')
+        
+        # 4. Age vs Risk Scatter Plot
+        age_scatter = ""
+        if len(df) > 0:
+            fig_scatter, ax_scatter = plt.subplots(figsize=(6, 4))
+            color_map = {'Low': '#28a745', 'Medium': '#ffc107', 'High': '#dc3545'}
+            for risk, color in color_map.items():
+                subset = df[df['risk_level'] == risk]
+                if len(subset) > 0:
+                    ax_scatter.scatter(subset['age'], subset['probability']*100, c=color, label=risk, alpha=0.7)
+            ax_scatter.set_title('Age vs Risk Probability')
+            ax_scatter.set_xlabel('Age')
+            ax_scatter.set_ylabel('Probability (%)')
+            ax_scatter.legend()
+            buf_scatter = io.BytesIO()
+            fig_scatter.savefig(buf_scatter, format='png', bbox_inches='tight')
+            plt.close(fig_scatter)
+            buf_scatter.seek(0)
+            age_scatter = base64.b64encode(buf_scatter.read()).decode('utf-8')
+            
+        # 5. Average Feature Values by Risk Level (Grouped Bar Chart)
+        feature_chart = ""
+        if len(df) > 0:
+            features = ['age', 'bmi', 'smoking', 'alcohol', 'physical_activity', 'family_history']
+            fig_feat, ax_feat = plt.subplots(figsize=(8, 4))
+            x = np.arange(len(features))
+            width = 0.25
+            
+            for i, risk in enumerate(['Low', 'Medium', 'High']):
+                subset = df[df['risk_level'] == risk]
+                if len(subset) > 0:
+                    means = [subset[f].mean() for f in features]
+                    ax_feat.bar(x + i*width, means, width, label=risk, color=['#28a745', '#ffc107', '#dc3545'][i])
+            
+            ax_feat.set_title('Average Feature Values by Risk Level')
+            ax_feat.set_xticks(x + width)
+            ax_feat.set_xticklabels(features, rotation=45)
+            ax_feat.legend()
+            plt.tight_layout()
+            buf_feat = io.BytesIO()
+            fig_feat.savefig(buf_feat, format='png', bbox_inches='tight')
+            plt.close(fig_feat)
+            buf_feat.seek(0)
+            feature_chart = base64.b64encode(buf_feat.read()).decode('utf-8')
+            
+        return insights, trend_chart, months_labels, monthly_counts, monthly_avg_prob, risk_pie, age_scatter, feature_chart, risk_counts
+    except Exception as e:
+        print(f"⚠ Analytics chart generation error: {e}")
+        return ["Error generating insights"], "", [], [], [], "", "", "", {'Low': 0, 'Medium': 0, 'High': 0}
+
 # ---------------- Routes ----------------
 @app.route('/')
 def index(): return render_template('index.html')
@@ -421,6 +591,26 @@ def download_csv():
         writer.writerow([a.timestamp.strftime('%Y-%m-%d'), a.age, a.bmi, a.risk_level])
     return Response(output.getvalue(), mimetype='text/csv', headers={'Content-Disposition': 'attachment; filename=data.csv'})
 
+@app.route('/admin')
+@login_required
+def admin():
+    if not current_user.is_admin:
+        flash('Access denied.', 'danger')
+        return redirect(url_for('dashboard'))
+    
+    risk_chart, prob_chart, avg_prob, risk_counts = generate_admin_charts()
+                
+    return render_template('admin.html',
+                           total_users=User.query.count(),
+                           total_assess=Assessment.query.count(),
+                           total_reminders=Reminder.query.count(),
+                           total_notifications=Notification.query.count(),
+                           avg_prob=round(avg_prob * 100, 1),
+                           risk_counts=risk_counts,
+                           risk_chart=risk_chart,
+                           prob_chart=prob_chart)
+
+# 🚀 NEW: Analytics Route
 @app.route('/analytics')
 @login_required
 def analytics():
@@ -428,46 +618,20 @@ def analytics():
         flash('Access denied.', 'danger')
         return redirect(url_for('dashboard'))
     
-    # Gather basic analytics data
-    total_users = User.query.count()
-    total_assessments = Assessment.query.count()
-    
-    risk_counts = {'Low': 0, 'Medium': 0, 'High': 0}
-    for a in Assessment.query.all():
-        if a.risk_level in risk_counts:
-            risk_counts[a.risk_level] += 1
+    insights, trend_chart, months_labels, monthly_counts, monthly_avg_prob, risk_pie, age_scatter, feature_chart, risk_counts = generate_analytics_charts()
             
     return render_template('analytics.html', 
-                           total_users=total_users, 
-                           total_assessments=total_assessments, 
-                           risk_counts=risk_counts)
-
-@app.route('/admin')
-@login_required
-def admin():
-    if not current_user.is_admin:
-        flash('Access denied.', 'danger')
-        return redirect(url_for('dashboard'))
-    try:
-        assessments = Assessment.query.all()
-        risk_counts = {'Low': 0, 'Medium': 0, 'High': 0}
-        for a in assessments:
-            if a.risk_level in risk_counts:
-                risk_counts[a.risk_level] += 1
-                
-        return render_template('admin.html',
-                               total_users=User.query.count(),
-                               total_assess=len(assessments),
-                               total_reminders=Reminder.query.count(),
-                               total_notifications=Notification.query.count(),
-                               risk_counts=risk_counts,
-                               risk_chart="",
-                               prob_chart="",
-                               avg_prob=0)
-    except Exception as e:
-        print(f"Admin Error: {e}")
-        flash('Error loading admin dashboard.', 'danger')
-        return redirect(url_for('dashboard'))
+                           total_users=User.query.count(), 
+                           total_assessments=Assessment.query.count(), 
+                           risk_counts=risk_counts,
+                           insights=insights,
+                           trend_chart=trend_chart,
+                           months_labels=months_labels,
+                           monthly_counts=monthly_counts,
+                           monthly_avg_prob=monthly_avg_prob,
+                           risk_pie=risk_pie,
+                           age_scatter=age_scatter,
+                           feature_chart=feature_chart)
 
 @app.route('/api/facilities', methods=['POST'])
 @csrf.exempt
