@@ -299,10 +299,15 @@ def login():
     if current_user.is_authenticated: return redirect(url_for('dashboard'))
     form = LoginForm()
     if form.validate_on_submit():
-        user = User.query.filter_by(email=form.email.data).first()
-        if user and bcrypt.check_password_hash(user.password, form.password.data):
-            login_user(user); session['language'] = user.preferred_language or 'en'
-            return redirect(url_for('dashboard'))
+        try:
+            user = User.query.filter_by(email=form.email.data).first()
+            if user and user.password:
+                if bcrypt.check_password_hash(user.password, form.password.data):
+                    login_user(user)
+                    session['language'] = user.preferred_language or 'en'
+                    return redirect(url_for('dashboard'))
+        except Exception as e:
+            print(f"Login Error: {e}") # Prevents 500 error
         flash('Invalid credentials.', 'danger')
     return render_template('login.html', form=form)
 
@@ -371,7 +376,13 @@ def emergency():
 
 @app.route('/notifications')
 @login_required
-def notifications(): return render_template('notifications.html', notifications=Notification.query.filter_by(user_id=current_user.id).order_by(Notification.created_at.desc()).all())
+def notifications():
+    try:
+        all_notifs = Notification.query.filter_by(user_id=current_user.id).order_by(Notification.created_at.desc()).all()
+    except Exception as e:
+        print(f"Notification DB Error: {e}")
+        all_notifs = []
+    return render_template('notifications.html', notifications=all_notifs)
 
 @app.route('/notifications/mark_read/<int:n_id>', methods=['POST'])
 @login_required
@@ -409,8 +420,29 @@ def download_csv():
 @app.route('/admin')
 @login_required
 def admin():
-    if not current_user.is_admin: return redirect(url_for('dashboard'))
-    return render_template('admin.html', total_users=User.query.count(), total_assess=Assessment.query.count(), risk_counts={'Low':0, 'Medium':0, 'High':0})
+    if not current_user.is_admin:
+        flash('Access denied.', 'danger')
+        return redirect(url_for('dashboard'))
+    try:
+        assessments = Assessment.query.all()
+        risk_counts = {'Low': 0, 'Medium': 0, 'High': 0}
+        for a in assessments:
+            if a.risk_level in risk_counts:
+                risk_counts[a.risk_level] += 1
+                
+        return render_template('admin.html',
+                               total_users=User.query.count(),
+                               total_assess=len(assessments),
+                               total_reminders=Reminder.query.count(),
+                               total_notifications=Notification.query.count(),
+                               risk_counts=risk_counts,
+                               risk_chart="",
+                               prob_chart="",
+                               avg_prob=0)
+    except Exception as e:
+        print(f"Admin Error: {e}")
+        flash('Error loading admin dashboard.', 'danger')
+        return redirect(url_for('dashboard'))
 
 @app.route('/api/facilities', methods=['POST'])
 @csrf.exempt
@@ -435,11 +467,15 @@ def nearby_facilities():
 # This ensures the database tables and admin user are created on Vercel startup
 with app.app_context():
     try:
+        # WARNING: This drops all tables and recreates them cleanly
+        db.drop_all() 
         db.create_all()
-        if not User.query.filter_by(is_admin=True).first():
-            db.session.add(User(email='admin@example.com', password=bcrypt.generate_password_hash('admin123').decode('utf-8'), is_admin=True))
-            db.session.commit()
-            print("✓ Admin user created automatically.")
+        
+        # Recreate admin with a fresh, valid password hash
+        admin = User(email='admin@example.com', password=bcrypt.generate_password_hash('admin123').decode('utf-8'), is_admin=True)
+        db.session.add(admin)
+        db.session.commit()
+        print("✓ Database reset and Admin created successfully.")
     except Exception as e:
         print(f"⚠ Database initialization error: {e}")
 

@@ -22,11 +22,9 @@ coordination, and analytics.
 
 ### Care Coordination
 - 🏥 **Facility Locator** — OpenStreetMap-powered map with distances
-- 🩺 **Telemedicine** — Jitsi Meet video consultation links
 - 📅 **Appointments** — In-person and telemedicine booking
 - ⏰ **Reminders** — Auto and custom health reminders
 - 🚨 **Emergency SOS** — Emergency contact + one-tap calling
-- 👨‍⚕️ **Doctor Directory** — Filterable specialist listings
 
 ### Engagement
 - 🔔 **Notifications** — In-app center with preferences
@@ -53,8 +51,6 @@ pip install -r requirements.txt
 # 2. Train ML model
 python model.py
 
-# 3. Seed sample doctors (optional)
-python seed_doctors.py
 
 # 4. Run the application
 python app.py

@@ -22,7 +22,7 @@
                 {% if not n.is_read %}<span class="notif-unread-dot"></span>{% endif %}
             </div>
             <div class="notif-message">{{ n.message }}</div>
-            <div class="notif-meta">🕒 {{ n.created_at.strftime('%b %d, %Y — %H:%M') }} · via {{ n.channel }}</div>
+            <div class="notif-meta">🕒 {{ n.created_at.strftime('%b %d, %Y') if n.created_at else 'Just now' }} · via in-app</div>
         </div>
         <div class="notif-actions">
             {% if not n.is_read %}
