@@ -421,6 +421,27 @@ def download_csv():
         writer.writerow([a.timestamp.strftime('%Y-%m-%d'), a.age, a.bmi, a.risk_level])
     return Response(output.getvalue(), mimetype='text/csv', headers={'Content-Disposition': 'attachment; filename=data.csv'})
 
+@app.route('/analytics')
+@login_required
+def analytics():
+    if not current_user.is_admin:
+        flash('Access denied.', 'danger')
+        return redirect(url_for('dashboard'))
+    
+    # Gather basic analytics data
+    total_users = User.query.count()
+    total_assessments = Assessment.query.count()
+    
+    risk_counts = {'Low': 0, 'Medium': 0, 'High': 0}
+    for a in Assessment.query.all():
+        if a.risk_level in risk_counts:
+            risk_counts[a.risk_level] += 1
+            
+    return render_template('analytics.html', 
+                           total_users=total_users, 
+                           total_assessments=total_assessments, 
+                           risk_counts=risk_counts)
+
 @app.route('/admin')
 @login_required
 def admin():
