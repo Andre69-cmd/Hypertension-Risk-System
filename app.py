@@ -35,14 +35,18 @@ APP_AUTHOR = "Hypertension Risk Research Team"
 # ---------------- Config ----------------
 app = Flask(__name__)
 
-# 🚀 POSTGRESQL & VERCEL FIX: Use Neon Database URL
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'fallback-secret-key-123')
-# Connect to Neon PostgreSQL. The 'sslmode=require' is mandatory for Neon.
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:////tmp/hypertension_week8.db')
-# Fix for SQLAlchemy 1.4+ if DATABASE_URL starts with postgres://
-if app.config['SQLALCHEMY_DATABASE_URI'].startswith("postgres://"):
-    app.config['SQLALCHEMY_DATABASE_URI'] = app.config['SQLALCHEMY_DATABASE_URI'].replace("postgres://", "postgresql://", 1)
 
+# 🚀 POSTGRESQL & VERCEL FIX: Get Neon Database URL
+db_uri = os.environ.get('DATABASE_URL', 'sqlite:////tmp/hypertension_week8.db')
+
+# 🛠️ CRITICAL FIX: Force SQLAlchemy to use psycopg2 instead of psycopg3
+if db_uri and db_uri.startswith("postgres://"):
+    db_uri = db_uri.replace("postgres://", "postgresql+psycopg2://", 1)
+elif db_uri and db_uri.startswith("postgresql://"):
+    db_uri = db_uri.replace("postgresql://", "postgresql+psycopg2://", 1)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['BABEL_DEFAULT_LOCALE'] = 'en'
 
@@ -307,7 +311,7 @@ def login():
                     session['language'] = user.preferred_language or 'en'
                     return redirect(url_for('dashboard'))
         except Exception as e:
-            print(f"Login Error: {e}") # Prevents 500 error
+            print(f"Login Error: {e}")
         flash('Invalid credentials.', 'danger')
     return render_template('login.html', form=form)
 
@@ -463,19 +467,25 @@ def nearby_facilities():
         return jsonify(facilities)
     except Exception as e: return jsonify({'error': str(e)}), 500
 
-# 🚀 VERCEL DEPLOYMENT FIX: Run initialization at module level, not just in __main__
-# This ensures the database tables and admin user are created on Vercel startup
+# 🚀 SAFE VERCEL DEPLOYMENT FIX: Initialize database safely on startup
 with app.app_context():
     try:
-        # WARNING: This drops all tables and recreates them cleanly
-        db.drop_all() 
+        # Create tables safely (does NOT drop existing data, preventing data loss on Vercel cold starts)
         db.create_all()
         
-        # Recreate admin with a fresh, valid password hash
-        admin = User(email='admin@example.com', password=bcrypt.generate_password_hash('admin123').decode('utf-8'), is_admin=True)
-        db.session.add(admin)
-        db.session.commit()
-        print("✓ Database reset and Admin created successfully.")
+        # Only create admin if it doesn't already exist
+        admin = User.query.filter_by(email='admin@example.com').first()
+        if not admin:
+            new_admin = User(
+                email='admin@example.com', 
+                password=bcrypt.generate_password_hash('admin123').decode('utf-8'), 
+                is_admin=True
+            )
+            db.session.add(new_admin)
+            db.session.commit()
+            print("✓ Admin user created successfully.")
+        else:
+            print("✓ Admin user already exists.")
     except Exception as e:
         print(f"⚠ Database initialization error: {e}")
 
